@@ -94,15 +94,6 @@ module.exports = {
             use: {
                 loader: 'babel-loader'
             }
-        }, {
-            test: /bootstrap\.native/,
-            use: {
-                loader: 'bootstrap.native-loader',
-                options: {
-                    bs_version: 4,
-                    ignore: bootstrap_ignore_modules
-                }
-            }
         }],
     },
     resolve: {

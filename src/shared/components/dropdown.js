@@ -4,6 +4,7 @@
 import 'shared/components/icons.js';
 import DOMNavigator from "shared/dom-navigator.js";
 import DropdownBase from 'shared/components/dropdownbase.js';
+import { Dropdown as BootstrapDropdown } from 'bootstrap.native';
 import { KEYCODES } from '@converse/headless/shared/constants.js';
 import { api } from "@converse/headless";
 import { html } from 'lit';
@@ -41,6 +42,7 @@ export default class Dropdown extends DropdownBase {
     firstUpdated () {
         super.firstUpdated();
         this.initArrowNavigation();
+        this.dropdown = new BootstrapDropdown(/** @type {HTMLElement} */(this.menu));
     }
 
     connectedCallback () {
@@ -52,6 +54,10 @@ export default class Dropdown extends DropdownBase {
     disconnectedCallback() {
         document.removeEventListener('keydown', this.hideOnEscape);
         super.disconnectedCallback();
+    }
+
+    toggleMenu () {
+        this.dropdown.toggle();
     }
 
     hideMenu () {

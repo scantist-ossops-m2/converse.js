@@ -1,9 +1,9 @@
 /**
  * @typedef {import('lit-html').TemplateResult} TemplateResult
  */
-import bootstrap from "bootstrap.native";
 import tplModal from './templates/modal.js';
 import { ElementView } from '@converse/skeletor';
+import { Modal } from "bootstrap.native";
 import { getOpenPromise } from '@converse/openpromise';
 
 
@@ -25,7 +25,7 @@ class BaseModal extends ElementView {
     }
 
     initialize () {
-        this.modal = new bootstrap.Modal(this, {
+        this.modal = new Modal(this, {
             backdrop: true,
             keyboard: true
         });
