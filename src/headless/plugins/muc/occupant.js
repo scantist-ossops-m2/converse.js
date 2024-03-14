@@ -42,6 +42,10 @@ class MUCOccupant extends Model {
         return this.get('nick') || this.get('jid');
     }
 
+    getColor () {
+        return this.get('color') || '';
+    }
+
     isMember () {
         return ['admin', 'owner', 'member'].includes(this.get('affiliation'));
     }
