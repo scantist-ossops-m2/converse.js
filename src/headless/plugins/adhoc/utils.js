@@ -1,5 +1,6 @@
 /**
  * @typedef {import('lit').TemplateResult} TemplateResult
+ * @typedef {import('../../shared/parsers').XForm} XForm
  */
 import sizzle from 'sizzle';
 import converse from '../../shared/api/public.js';
@@ -31,32 +32,26 @@ export function parseForCommands(stanza) {
  * @property {string} text
  * @property {'info'|'warn'|'error'} type
  *
- * @typedef {Object} AdHocCommandResult
+ * @typedef {Object} AdHocCommandAttrs
  * @property {string} sessionid
- * @property {string} [title]
- * @property {string} [instructions]
- * @property {TemplateResult[]} [fields]
  * @property {string[]} [actions]
  * @property {AdHocCommandResultNote} [note]
+ *
+ * @typedef {XForm & AdHocCommandAttrs} AdHocCommandResult
  */
-
 
 /**
  * Given a "result" IQ stanza containing the outcome of an Ad-hoc command that
  * was executed, parse it and return the values as a JSON object.
  * @param {Element} iq
- * @param {string} [jid]
  * @returns {AdHocCommandResult}
  */
-export function parseCommandResult(iq, jid) {
+export function parseCommandResult(iq) {
     const cmd_el = sizzle(`command[xmlns="${Strophe.NS.ADHOC}"]`, iq).pop();
     const note = cmd_el.querySelector('note');
 
-    const xform = parseXForm(iq);
-    console.log(xform);
-
     return {
-        ...xform,
+        ...parseXForm(iq),
         sessionid: cmd_el.getAttribute('sessionid'),
         note: note
             ? {
@@ -65,10 +60,5 @@ export function parseCommandResult(iq, jid) {
               }
             : null,
         actions: Array.from(cmd_el.querySelector('actions')?.children ?? []).map((a) => a.nodeName.toLowerCase()),
-
-        // FIXME: xForm2TemplateResult shouldn't be used in headless.
-        fields: sizzle('x[type="form"][xmlns="jabber:x:data"] field', cmd_el).map(
-            /** @param {Element} f */ (f) => u.xForm2TemplateResult(f, cmd_el, { domain: jid })
-        ),
     };
 }

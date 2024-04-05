@@ -110,18 +110,18 @@ export function isServerMessage(stanza: Element): boolean;
  */
 export function isArchived(original_stanza: Element): boolean;
 /**
- * @param {Element} stanza
- * @returns XForm
- */
+* @param {Element} stanza
+* @returns XForm
+*/
 export function parseXForm(stanza: Element): {
-    reported: any[];
-    items: any[][];
-    type: string;
+    reported: XFormReportedField[];
+    items: XFormResultItemField[][];
+    type: XFormResponseType;
     title: string;
 } | {
     instructions: string;
     fields: XFormField[];
-    type: string;
+    type: XFormResponseType;
     title: string;
 };
 export class StanzaParseError extends Error {
@@ -136,7 +136,7 @@ export type XFormReportedField = {
     var: string;
     label: string;
 };
-export type XFormResultItem = {
+export type XFormResultItemField = {
     var: string;
     value: string;
 };
@@ -165,12 +165,13 @@ export type XFormField = {
     options?: XFormOption[];
     uri?: XFormCaptchaURI;
 };
+export type XFormResponseType = 'result' | 'form';
 export type XForm = {
-    type: 'result' | 'form';
+    type: XFormResponseType;
     title?: string;
     instructions?: string;
     reported?: XFormReportedField[];
-    items?: XFormResultItem[];
+    items?: XFormResultItemField[][];
     fields?: XFormField[];
 };
 export type Reference = any;
