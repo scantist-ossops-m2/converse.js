@@ -19,6 +19,7 @@ export function parseForCommands(stanza: Element): AdHocCommand[];
  *
  * @typedef {Object} AdHocCommandResult
  * @property {string} sessionid
+ * @property {string} [title]
  * @property {string} [instructions]
  * @property {TemplateResult[]} [fields]
  * @property {string[]} [actions]
@@ -44,6 +45,7 @@ export type AdHocCommandResultNote = {
 };
 export type AdHocCommandResult = {
     sessionid: string;
+    title?: string;
     instructions?: string;
     fields?: TemplateResult[];
     actions?: string[];

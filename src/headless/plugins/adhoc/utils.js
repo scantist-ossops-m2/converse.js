@@ -3,6 +3,7 @@
  */
 import sizzle from 'sizzle';
 import converse from '../../shared/api/public.js';
+import { parseXForm } from '../../shared/parsers.js';
 
 const { Strophe, u } = converse.env;
 
@@ -32,11 +33,13 @@ export function parseForCommands(stanza) {
  *
  * @typedef {Object} AdHocCommandResult
  * @property {string} sessionid
+ * @property {string} [title]
  * @property {string} [instructions]
  * @property {TemplateResult[]} [fields]
  * @property {string[]} [actions]
  * @property {AdHocCommandResultNote} [note]
  */
+
 
 /**
  * Given a "result" IQ stanza containing the outcome of an Ad-hoc command that
@@ -49,19 +52,23 @@ export function parseCommandResult(iq, jid) {
     const cmd_el = sizzle(`command[xmlns="${Strophe.NS.ADHOC}"]`, iq).pop();
     const note = cmd_el.querySelector('note');
 
-    const data = {
+    const xform = parseXForm(iq);
+    console.log(xform);
+
+    return {
+        ...xform,
         sessionid: cmd_el.getAttribute('sessionid'),
-        instructions: sizzle('x[type="form"][xmlns="jabber:x:data"] instructions', cmd_el).pop()?.textContent,
-        fields: sizzle('x[type="form"][xmlns="jabber:x:data"] field', cmd_el).map(
-            /** @param {Element} f */ (f) => u.xForm2TemplateResult(f, cmd_el, { domain: jid })
-        ),
-        actions: Array.from(cmd_el.querySelector('actions')?.children ?? []).map((a) => a.nodeName.toLowerCase()),
         note: note
             ? {
                   text: note.textContent,
                   type: note.getAttribute('type'),
               }
             : null,
+        actions: Array.from(cmd_el.querySelector('actions')?.children ?? []).map((a) => a.nodeName.toLowerCase()),
+
+        // FIXME: xForm2TemplateResult shouldn't be used in headless.
+        fields: sizzle('x[type="form"][xmlns="jabber:x:data"] field', cmd_el).map(
+            /** @param {Element} f */ (f) => u.xForm2TemplateResult(f, cmd_el, { domain: jid })
+        ),
     };
-    return data;
 }

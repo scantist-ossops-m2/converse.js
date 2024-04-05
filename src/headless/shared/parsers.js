@@ -2,13 +2,14 @@
  * @module:headless-shared-parsers
  * @typedef {module:headless-shared-parsers.Reference} Reference
  */
+import sizzle from 'sizzle';
 import _converse from './_converse.js';
 import api from './api/index.js';
 import dayjs from 'dayjs';
 import log from '../log.js';
-import sizzle from 'sizzle';
 import { Strophe } from 'strophe.js';
 import { decodeHTMLEntities } from '../utils/html.js';
+import { getAttributes } from '../utils/stanza.js';
 import { rejectMessage } from './actions';
 
 const { NS } = Strophe;
@@ -339,4 +340,184 @@ export function isServerMessage (stanza) {
  */
 export function isArchived (original_stanza) {
     return !!sizzle(`message > result[xmlns="${Strophe.NS.MAM}"]`, original_stanza).pop();
+}
+
+/**
+ * @typedef {Object} XFormReportedField
+ * @property {string} var
+ * @property {string} label
+ *
+ * @typedef {Object} XFormResultItem
+ * @property {string} var
+ * @property {string} value
+ *
+ * @typedef {Object} XFormOption
+ * @property {string} value
+ * @property {string} label
+ * @property {boolean} selected
+ * @property {boolean} required
+ *
+ * @typedef {Object} XFormCaptchaURI
+ * @property {string} type
+ * @property {string} data
+ *
+ * @typedef {'list-single'|'list-multi'} XFormListTypes
+ * @typedef {'jid-single'|'jid-multi'} XFormJIDTypes
+ * @typedef {'text-multi'|'text-private'|'text-single'} XFormTextTypes
+ * @typedef {XFormListTypes|XFormJIDTypes|XFormTextTypes|'fixed'|'boolean'|'url'|'hidden'} XFormFieldTypes
+ *
+ * @typedef {Object} XFormField
+ * @property {string} var
+ * @property {string} label
+ * @property {XFormFieldTypes} [type]
+ * @property {string} [text]
+ * @property {string} [value]
+ * @property {boolean} [required]
+ * @property {boolean} [checked]
+ * @property {XFormOption[]} [options]
+ * @property {XFormCaptchaURI} [uri]
+ *
+ * @typedef {Object} XForm
+ * @property {'result'|'form'} type
+ * @property {string} [title]
+ * @property {string} [instructions]
+ * @property {XFormReportedField[]} [reported]
+ * @property {XFormResultItem[]} [items]
+ * @property {XFormField[]} [fields]
+ */
+
+/**
+ * @param {Element} field
+ * @param {Element} stanza
+ * @return {XFormField}
+ */
+function parseXFormField(field, stanza) {
+    const v = field.getAttribute('var');
+    const label = field.getAttribute('label') || '';
+    const type = field.getAttribute('type');
+
+    if (type === 'list-single' || type === 'list-multi') {
+        const values = Array.from(field.querySelectorAll(':scope > value')).map((el) => el?.textContent);
+        const options = Array.from(field.querySelectorAll(':scope > option')).map(
+            (/** @type {HTMLElement} */ option) => {
+                const value = option.querySelector('value')?.textContent;
+                return {
+                    value,
+                    label: option.getAttribute('label'),
+                    selected: values.includes(value),
+                    required: !!field.querySelector('required'),
+                };
+            }
+        );
+        return {
+            type,
+            options,
+            label: field.getAttribute('label'),
+            var: v,
+            required: !!field.querySelector('required'),
+        };
+    } else if (type === 'fixed') {
+        const text = field.querySelector('value')?.textContent;
+        return { text, label, type, var: v };
+    } else if (type === 'jid-multi') {
+        return {
+            type,
+            var: v,
+            label,
+            value: field.querySelector('value')?.textContent,
+            required: !!field.querySelector('required'),
+        };
+    } else if (type === 'boolean') {
+        const value = field.querySelector('value')?.textContent;
+        return {
+            type,
+            var: v,
+            label,
+            checked: ((value === '1' || value === 'true') && true) || false,
+        };
+    } else if (v === 'url') {
+        return {
+            var: v,
+            label,
+            value: field.querySelector('value')?.textContent,
+        };
+    } else if (v === 'username') {
+        return {
+            var: v,
+            label,
+            value: field.querySelector('value')?.textContent,
+            required: !!field.querySelector('required'),
+        };
+    } else if (v === 'password') {
+        return {
+            var: v,
+            label,
+            value: field.querySelector('value')?.textContent,
+            required: !!field.querySelector('required'),
+        };
+    } else if (v === 'ocr') { // Captcha
+        const uri = field.querySelector('uri');
+        const el = sizzle('data[cid="' + uri.textContent.replace(/^cid:/, '') + '"]', stanza)[0];
+        return {
+            label: field.getAttribute('label'),
+            var: v,
+            uri: {
+                type: uri.getAttribute('type'),
+                data: el?.textContent,
+            },
+            required: !!field.querySelector('required'),
+        };
+    } else {
+        return {
+            label,
+            var: v,
+            required: !!field.querySelector('required'),
+            value: field.querySelector('value')?.textContent,
+        };
+    }
+}
+
+/**
+ * @param {Element} stanza
+ * @returns XForm
+ */
+export function parseXForm(stanza) {
+    const xs = stanza.getElementsByTagNameNS(Strophe.NS.XFORM, 'x');
+    if (xs.length > 1) {
+        log.error(stanza);
+        throw new Error('Invalid stanza');
+    } else if (xs.length === 0) {
+        return null;
+    }
+
+    const x = xs[0];
+    const type = x.getAttribute('type');
+    const result = {
+        type,
+        title: x.querySelector('title')?.textContent,
+    };
+
+    if (type === 'result') {
+        const reported = x.querySelector(':scope > reported');
+        const reported_fields = reported?.querySelectorAll(':scope > field');
+        const items = x.querySelectorAll(':scope > item');
+        return {
+            ...result,
+            reported: Array.from(reported_fields).map(getAttributes),
+            items: Array.from(items).map((item) => {
+                return Array.from(item.querySelectorAll('field')).map((field) => {
+                    return {
+                        ...getAttributes(field),
+                        value: field.querySelector('value')?.textContent ?? '',
+                    };
+                });
+            }),
+        };
+    } else if (type === 'form') {
+        return {
+            ...result,
+            instructions: x.querySelector('instructions')?.textContent,
+            fields: Array.from(x.querySelectorAll('field')).map((field) => parseXFormField(field, stanza)),
+        };
+    }
 }

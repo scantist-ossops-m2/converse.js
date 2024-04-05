@@ -42,7 +42,11 @@ export function removeClass(className: string, el: Element): Element;
  * @param { Element } el
  */
 export function removeElement(el: Element): Element;
-export function ancestor(el: any, selector: any): any;
+/**
+ * @param {HTMLElement} el
+ * @param {String} selector
+ */
+export function ancestor(el: HTMLElement, selector: string): HTMLElement;
 /**
  * @param {string} url
  */
@@ -50,8 +54,8 @@ export function getHyperlinkTemplate(url: string): string | import("lit-html").T
 /**
  * Shows/expands an element by sliding it out of itself
  * @method slideOut
- * @param { HTMLElement } el - The HTML string
- * @param { Number } duration - The duration amount in milliseconds
+ * @param {HTMLElement} el - The HTML string
+ * @param {Number} duration - The duration amount in milliseconds
  */
 export function slideOut(el: HTMLElement, duration?: number): Promise<any>;
 /**

@@ -25,6 +25,7 @@ declare namespace _default {
         }[]): Promise<{
             note: any;
             sessionid?: string;
+            title?: string;
             instructions?: string;
             fields?: import("./utils.js").TemplateResult[];
             actions?: string[];

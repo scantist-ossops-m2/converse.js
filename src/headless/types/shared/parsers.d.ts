@@ -109,6 +109,21 @@ export function isServerMessage(stanza: Element): boolean;
  * @returns {boolean}
  */
 export function isArchived(original_stanza: Element): boolean;
+/**
+ * @param {Element} stanza
+ * @returns XForm
+ */
+export function parseXForm(stanza: Element): {
+    reported: any[];
+    items: any[][];
+    type: string;
+    title: string;
+} | {
+    instructions: string;
+    fields: XFormField[];
+    type: string;
+    title: string;
+};
 export class StanzaParseError extends Error {
     /**
      * @param {string} message
@@ -117,5 +132,46 @@ export class StanzaParseError extends Error {
     constructor(message: string, stanza: Element);
     stanza: Element;
 }
+export type XFormReportedField = {
+    var: string;
+    label: string;
+};
+export type XFormResultItem = {
+    var: string;
+    value: string;
+};
+export type XFormOption = {
+    value: string;
+    label: string;
+    selected: boolean;
+    required: boolean;
+};
+export type XFormCaptchaURI = {
+    type: string;
+    data: string;
+};
+export type XFormListTypes = 'list-single' | 'list-multi';
+export type XFormJIDTypes = 'jid-single' | 'jid-multi';
+export type XFormTextTypes = 'text-multi' | 'text-private' | 'text-single';
+export type XFormFieldTypes = XFormListTypes | XFormJIDTypes | XFormTextTypes | 'fixed' | 'boolean' | 'url' | 'hidden';
+export type XFormField = {
+    var: string;
+    label: string;
+    type?: XFormFieldTypes;
+    text?: string;
+    value?: string;
+    required?: boolean;
+    checked?: boolean;
+    options?: XFormOption[];
+    uri?: XFormCaptchaURI;
+};
+export type XForm = {
+    type: 'result' | 'form';
+    title?: string;
+    instructions?: string;
+    reported?: XFormReportedField[];
+    items?: XFormResultItem[];
+    fields?: XFormField[];
+};
 export type Reference = any;
 //# sourceMappingURL=parsers.d.ts.map

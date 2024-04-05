@@ -276,6 +276,9 @@ class RegisterPanel extends CustomElement {
         return [...input_fields, ...urls];
     }
 
+    /**
+     * @param {Element} stanza
+     */
     getFormFields (stanza) {
         if (this.form_type === 'xform') {
             return Array.from(stanza.querySelectorAll('field')).map(field =>
@@ -391,6 +394,9 @@ class RegisterPanel extends CustomElement {
         this.form_type = 'legacy';
     }
 
+    /**
+     * @param {Element} xform
+     */
     _setFieldsFromXForm (xform) {
         this.title = xform.querySelector('title')?.textContent ?? '';
         this.instructions = xform.querySelector('instructions')?.textContent ?? '';

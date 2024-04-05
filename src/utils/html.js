@@ -293,6 +293,10 @@ function hideElement (el) {
     return el;
 }
 
+/**
+ * @param {HTMLElement} el
+ * @param {String} selector
+ */
 export function ancestor (el, selector) {
     let parent = el;
     while (parent !== null && !sizzle.matchesSelector(parent, selector)) {
@@ -304,8 +308,8 @@ export function ancestor (el, selector) {
 /**
  * Return the element's siblings until one matches the selector.
  * @method u#nextUntil
- * @param { HTMLElement } el
- * @param { String } selector
+ * @param {HTMLElement} el
+ * @param {String} selector
  */
 function nextUntil (el, selector) {
     const matches = [];
@@ -360,8 +364,8 @@ export function getHyperlinkTemplate (url) {
 /**
  * Shows/expands an element by sliding it out of itself
  * @method slideOut
- * @param { HTMLElement } el - The HTML string
- * @param { Number } duration - The duration amount in milliseconds
+ * @param {HTMLElement} el - The HTML string
+ * @param {Number} duration - The duration amount in milliseconds
  */
 export function slideOut (el, duration = 200) {
     return new Promise((resolve, reject) => {
